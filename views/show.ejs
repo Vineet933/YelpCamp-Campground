@@ -1,0 +1,126 @@
+<% layout('layouts/boilerplate') %>
+
+<link rel="stylesheet" href="/stars.css">
+
+
+
+
+
+<div class="card mb-5" style="width: 40rem; margin : 2vw auto 2vw auto;">
+
+  <div id='map' style='width: 640px; height: 400px; margin-bottom : 2vw;'></div>
+
+  <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-inner">
+      <% campground.images.forEach((image , i ) => { %>
+      <div class="carousel-item <%= i === 0 ? 'active' : '' %>">
+        <img src="<%= image.url %>" class="d-block w-100" alt="" crossorigin="anonymous">
+      </div>
+      <% }) %>
+
+    </div>
+    <% if(campground.images.length > 1) { %>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
+    <% } %>
+  </div>
+    <div class="card-body">
+      <h5 class="card-title"><%= campground.title %></h5>
+      <h6 class="card-title" style="color: rgb(40, 169, 249);">Author : <%= campground.author.username %></h6>
+      <p class="card-text"><%= campground.description %></p>
+    </div>
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item"><%= campground.location %></li>
+        <li class="list-group-item">Rs.<%= campground.price %>/night</li>
+    </ul>
+    <div class="card-body">
+      <% if(currentUser && campground.author.equals(currentUser.id)){ %>
+        <a href="/campgrounds/<%= campground.id %>/edit" class="card-link btn btn-warning">Edit</a>
+        <form action="/campgrounds/<%= campground.id %>?_method=DELETE" method="post" class="d-inline">
+
+          <button class="btn btn-danger">Delete</button>
+
+        </form>
+      <% } %>
+      <a href="/campgrounds" class="card-link btn btn-info" >All Campgrounds</a>
+    </div>
+
+    <div style="display: flex ; flex-direction: column; margin-top: 1px solid rgb(184, 184, 184); padding: 1vw;">
+      <h4>Comments</h4>
+      <% for (let comment of campground.reviews){ %>
+        <div style="padding : 1vw; background-color : rgb(246, 246, 246) ; border-radius : 10px; margin: 1vw 0vw 0vw 0vw;">
+          <p class="starability-result" data-rating="<%= comment.rating %>" style="transform: scale(0.7) translateX(-2vw);">
+            Rated: <%= comment.rating  %> stars
+          </p>
+          <p><%= comment.comment %></p>
+          <p style="text-align: right;"> - <%= comment.author.username  %></p>
+          <% if(currentUser && comment.author.equals(currentUser.id)) { %>
+            <form action="/campgrounds/<%= campground.id %>/<%= comment.id %>?_method=DELETE" method="post">
+              <button class="btn btn-light" style="border: 1px solid rgb(216, 215, 215);">Remove</button>
+            </form>
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+
+  </div>
+
+  <h2 style="margin-left: 22vw;">Provide reviews and ratings</h2>
+
+  <form action="/campgrounds/<%= campground.id %>/reviews" method="post" class="needs-validation" novalidate>
+    
+    <div style="display: flex; padding: 1vw; width: 40vw; margin : 1vw auto 1vw auto; border-bottom: 1px solid rgb(180, 180, 180)">
+
+      <fieldset class="starability-grow">
+        <legend>Rating</legend>
+        <input type="radio" id="no-rate" class="input-no-rate" name="rating" value="1" checked aria-label="No rating." />
+        <input type="radio" id="first-rate1" name="rating" value="1" />
+        <label for="first-rate1" title="Terrible">1 star</label>
+        <input type="radio" id="first-rate2" name="rating" value="2" />
+        <label for="first-rate2" title="Not good">2 stars</label>
+        <input type="radio" id="first-rate3" name="rating" value="3" />
+        <label for="first-rate3" title="Average">3 stars</label>
+        <input type="radio" id="first-rate4" name="rating" value="4" />
+        <label for="first-rate4" title="Very good">4 stars</label>
+        <input type="radio" id="first-rate5" name="rating" value="5" />
+        <label for="first-rate5" title="Amazing">5 stars</label>
+      </fieldset>
+    </div>
+  
+    <div style="display: flex; flex-direction: column; padding: 1vw; width: 40vw; margin : 0vw auto 1vw auto">
+        <label for="comment" class="form-label">Comment</label><br>
+        <textarea name="comment" id="comment" cols="60" rows="5" placeholder="Write your thoughts here..." required class="form-control"></textarea>
+        <button class="btn btn-success mt-3">Submit</button>
+    </div>
+
+  </form>
+
+  <script>
+    mapboxgl.accessToken = '<%- process.env.MAPBOX_TOKEN %>';
+    const campground = <%- JSON.stringify(campground) %>;
+
+    const map = new mapboxgl.Map({
+        container: 'map', // container ID
+        style: 'mapbox://styles/mapbox/navigation-day-v1', // style URL
+        center: campground.geometry.coordinates, // starting position [lng, lat]
+        zoom: 9, // starting zoom
+    });
+
+    new mapboxgl.Marker()
+      .setLngLat(campground.geometry.coordinates)
+      .setPopup(
+        new mapboxgl.Popup({offset : 40})
+          .setHTML(
+            `<h6>  ${campground.title}  </h6>`
+          )
+      )
+      .addTo(map)
+    </script>
+
+  
